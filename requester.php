@@ -1,4 +1,9 @@
 <?php
+/**
+* Класс исключений класса Requester
+* @author Petr Bondarenko
+* @see Requester
+*/
 class RequesterException extends Exception {}
 
 /**
@@ -7,13 +12,52 @@ class RequesterException extends Exception {}
 * @version 0.1
 */
 class Requester {
+    /**
+    * URL запроса
+    * @var string
+    */
     protected $_url;
+
+    /**
+    * Ассоциативный массив параметров запроса
+    * @var array
+    */
     protected $_params;
+
+    /**
+    * Метод запроса.
+    * @var string
+    */
     protected $_method;
+
+    /**
+    * DEBUG-режим
+    * @var boolean
+    */
     protected $_debug = false;
+
+    /**
+    * Таймаут соединения. Секунд.
+    * @var int
+    */
     protected $_cTimeout = 0;
+
+    /**
+    * Протокол соединения
+    * @var string
+    */
     protected $_protocol = CURLPROTO_HTTP;
+
+    /**
+    * Порт соединения
+    * @var int
+    */
     protected $_port = null;
+
+    /**
+    * Заголовок User-agent
+    * @var string
+    */
     protected $_useragent;
 
     /**
@@ -29,6 +73,7 @@ class Requester {
     public function __construct($url = null, $params = array(), $method = null) {
         $this->_url = $url;
         
+        //Если получен массив, то присваиваем значение, иначе выкидываем исключение
         if (is_array($params)) {
             $this->_params = $params;
         } else {
@@ -170,6 +215,7 @@ class Requester {
     * @access protected
     */
     protected function getQueryString() {
+        //Если массив пустой, то возвращаем пустую строку
         if (sizeof($this->_params) == 0) {
             return '';
         } else {
@@ -196,44 +242,73 @@ class Requester {
             throw new RequesterException('No request method is specified');
         }
                 
+        //Инициализируем curl
         $curl = curl_init();
 
+        //Получаем закодированную строку запроса
         $query_string = $this->getQueryString($this->_params);
 
         if (strtolower($this->_method) == 'post') {
+            //Устанавливаем URL
             curl_setopt($curl, CURLOPT_URL, $this->_url);
+            
+            //Указываем метод POST
             curl_setopt($curl, CURLOPT_POST, 1);
+            
+            //Передаем список параметров запроса
             curl_setopt($curl, CURLOPT_POSTFIELDS, $query_string);
         } else if (strtolower($this->_method) == 'get') {
+            //Устанавливаем URL и конкейтим с параметрами запроса
             curl_setopt($curl, CURLOPT_URL, $this->_url . '?' . $query_string);
+
+            //Сбрасываем метод запроса на GET
             curl_setopt($curl, CURLOPT_HTTPGET, 1);
         } else {
+            //Устанавливаем URL и конкейти с параметрами запроса
             curl_setopt($curl, CURLOPT_URL, $this->_url . '?' . $query_string);
+
+            //Устанавливаем метод запроса, кроме GET/POST.
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($this->_method));
         }
 
+        //Режим отображения заголовков в ответе
         curl_setopt($curl, CURLOPT_HEADER, $header);
+
+        //Возвращать результат, а не выводить его
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         
+        //Если от сервера получен код >400, то завершаем передачу и не выводим ответ
         curl_setopt($curl, CURLOPT_FAILONERROR, 1);
+
+        //Слудем заголовкам Location:
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         
         if ($this->_debug) {
+            //Включаем PROGRESS
             curl_setopt($curl, CURLOPT_NOPROGRESS, 0);
         }
 
+        //Устанавливаем таймаут для соединения
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->_cTimeout);
+
+        //Устанавливаем протокол
         curl_setopt($curl, CURLOPT_PROTOCOLS, $this->_protocol);
 
         if ($this->_port !== null) {
+            //Устанавливаем порт
             curl_setopt($curl, CURLOPT_PORT, $this->_port);
         }
 
+        //Устанавливаем USER-AGENT
         curl_setopt($curl, CURLOPT_USERAGENT, $this->_useragent);
         
+        //Выполняем запрос
         $result = curl_exec($curl);
+        
+        //Закрываем соединение
         curl_close($curl);
 
+        //Парамтеры запроса
         $request_info = array(
                             'url' => $this->_url,
                             'method' => $this->_method,
