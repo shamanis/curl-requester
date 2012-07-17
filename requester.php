@@ -24,6 +24,7 @@ class Requester {
     * @see Requester::setUrl()
     * @see Requester::setParams()
     * @see Requester::setMethod()
+    * @throws RequesterException
     */
     public function __construct($url = null, $params = array(), $method = null) {
         $this->_url = $url;
@@ -185,6 +186,7 @@ class Requester {
     * Выполнить запрос на сервер
     * @param boolean $header Включить заголовки
     * @return array Массив результат запроса
+    * @throws RequesterException
     */
     public function request($header = false) {
         if ($this->_url === null) {
