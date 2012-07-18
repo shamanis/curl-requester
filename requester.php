@@ -10,6 +10,7 @@ class RequesterException extends Exception {}
 * Класс для работы с библиотекой cURL
 * @author Petr Bondarenko
 * @version 0.1
+* @license http://opensource.org/licenses/bsd-license.php BSD License
 */
 class Requester {
     /**
